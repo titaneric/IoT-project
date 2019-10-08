@@ -2,4 +2,5 @@ log/
 whole_month/
 .ipynb_checkpoints/
 *.pickle
-log.zip
+*.zip
+*.csv
