@@ -16,22 +16,27 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 parser = argparse.ArgumentParser(description='Extract the feature vector from log and dump to pickle')
+parser.add_argument('normal_user_name', type=str, nargs='?', default='user', help='Name of normal user')
+parser.add_argument('abnormal_user_name', type=str, nargs='?', default='nuser', help='Name of abnormal user')
 parser.add_argument('abnormal_user', type=int, nargs='?', default=4, help='Number of abnormal user')
 parser.add_argument('normal_user', type=int, nargs='?', default=8, help='Number of normal user')
-parser.add_argument('features', type=str, nargs='?', default='appearance byte-receive byte-send', help='Features of log want to extract')
-parser.add_argument('exclude_date', type=str, nargs='*', default='11/28 11/29', help='Dates want to be excluded, which will be in test data')
 parser.add_argument('source_normal_path', type=str, nargs='?', default='log/normal', help='Directory of normal source logs')
 parser.add_argument('source_abnormal_path', type=str, nargs='?', default='log/abnormal', help='Directory of abnormal source logs')
+
+parser.add_argument('features', type=str, nargs='?', default='appearance byte-receive byte-send', help='Features of log want to extract')
+parser.add_argument('exclude_date', type=str, nargs='*', default='11/28 11/29', help='Dates want to be excluded, which will be in test data')
 parser.add_argument('header_file', type=str, nargs='?', default='header.txt', help='Header file')
 parser.add_argument('file_regex', type=str, nargs='?', default=r'.*_(\d+_\d+).*', help='Header file')
 parser.add_argument('train_file_name', type=str, nargs='?', default='train.pickle', help='Pickle name of training data')
 parser.add_argument('test_file_name', type=str, nargs='?', default='test.pickle', help='Pickle name of testing data')
 args = parser.parse_args()
 
-head = 'receive time,type,source ip,from port,dest ip,to port,application,action,session end,byte receive,byte send,ip protocol,packet receive,packet send,start time'
+with open(args.header_file, 'r') as f:
+    header = f.readline()
+
 config_dict = {
-    True: {'user': 'user', 'number': args.abnormal_user, 'base': 0},
-    False: {'user': 'nuser', 'number': args.normal_user, 'base': args.abnormal_user},
+    True: {'user': args.abnormal_user_name, 'number': args.abnormal_user, 'base': 0},
+    False: {'user': args.normal_user_name, 'number': args.normal_user, 'base': args.abnormal_user},
 }
 
 total_user = config_dict[True]['number'] + config_dict[False]['number']
@@ -65,7 +70,7 @@ def extract_feature_vector():
                 next_day = datetime.strptime(f"2018_{file_date}", r"%Y_%m_%d") + timedelta(days=1)
                 next_day = next_day.strftime(r"%m_%d")
 
-                log = pd.read_csv(f, header=None, names=list(map(lambda f: f.replace(' ', '-'), head.split(','))))
+                log = pd.read_csv(f, header=None, names=list(map(lambda f: f.replace(' ', '-'), header.split(','))))
                 log['start-time'] = log['start-time'].astype('datetime64')
                 log['receive-time'] = log['receive-time'].astype('datetime64')
                 log['appearance'] = 1
