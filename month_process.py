@@ -16,15 +16,15 @@ np.seterr(divide='ignore', invalid='ignore')
 
 
 parser = argparse.ArgumentParser(description='Extract the feature vector from log and dump to pickle')
-parser.add_argument('normal_user_name', type=str, nargs='?', default='user', help='Name of normal user')
-parser.add_argument('abnormal_user_name', type=str, nargs='?', default='nuser', help='Name of abnormal user')
-parser.add_argument('abnormal_user', type=int, nargs='?', default=4, help='Number of abnormal user')
+parser.add_argument('normal_user_name', type=str, nargs='?', default='nuser', help='Name of normal user')
+parser.add_argument('abnormal_user_name', type=str, nargs='?', default='user', help='Name of abnormal user')
 parser.add_argument('normal_user', type=int, nargs='?', default=8, help='Number of normal user')
+parser.add_argument('abnormal_user', type=int, nargs='?', default=4, help='Number of abnormal user')
 parser.add_argument('source_normal_path', type=str, nargs='?', default='log/normal', help='Directory of normal source logs')
 parser.add_argument('source_abnormal_path', type=str, nargs='?', default='log/abnormal', help='Directory of abnormal source logs')
 
 parser.add_argument('features', type=str, nargs='?', default='appearance byte-receive byte-send', help='Features of log want to extract')
-parser.add_argument('exclude_date', type=str, nargs='*', default='11/28 11/29', help='Dates want to be excluded, which will be in test data')
+parser.add_argument('exclude_date', type=str, nargs='*', default='11-28 11-29', help='Dates want to be excluded, which will be in test data')
 parser.add_argument('header_file', type=str, nargs='?', default='header.txt', help='Header file')
 parser.add_argument('file_regex', type=str, nargs='?', default=r'.*_(\d+_\d+).*', help='Header file')
 parser.add_argument('train_file_name', type=str, nargs='?', default='train.pickle', help='Pickle name of training data')
@@ -47,7 +47,7 @@ features = list(map(lambda feature: feature.strip(), args.features.split()))
 train_dict = {feature: [] for feature in features}
 test_dict = {feature: [] for feature in features}
 
-exclude_date = list(map(lambda date: date.replace('/', '_').strip(), args.exclude_date.split()))
+exclude_date = list(map(lambda date: date.replace('-', '_').strip(), args.exclude_date.split()))
 source_normal_path = Path(args.source_normal_path)
 source_abnormal_path = Path(args.source_abnormal_path)
 train_file_name = args.train_file_name
