@@ -33,6 +33,8 @@ args = parser.parse_args()
 
 with open(args.header_file, 'r') as f:
     header = f.readline()
+    header = header.lower().replace(' ', '-')
+    header = header.split(',')
 
 config_dict = {
     True: {'user': args.abnormal_user_name, 'number': args.abnormal_user, 'base': 0},
@@ -44,6 +46,10 @@ train_valid_dict = {user: [] for user in range(total_user)}
 test_valid_dict = {user: [] for user in range(total_user)}
 
 features = list(map(lambda feature: feature.strip(), args.features.split()))
+for feature in features:
+    if feature != 'appearance':
+        assert feature in set(header)
+
 train_dict = {feature: [] for feature in features}
 test_dict = {feature: [] for feature in features}
 
@@ -70,7 +76,7 @@ def extract_feature_vector():
                 next_day = datetime.strptime(f"2018_{file_date}", r"%Y_%m_%d") + timedelta(days=1)
                 next_day = next_day.strftime(r"%m_%d")
 
-                log = pd.read_csv(f, header=None, names=list(map(lambda f: f.replace(' ', '-'), header.split(','))))
+                log = pd.read_csv(f, header=None, names=header)
                 log['start-time'] = log['start-time'].astype('datetime64')
                 log['receive-time'] = log['receive-time'].astype('datetime64')
                 log['appearance'] = 1
