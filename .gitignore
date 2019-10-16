@@ -4,3 +4,5 @@ whole_month/
 *.pickle
 *.zip
 *.csv
+env/
+__pycache__
