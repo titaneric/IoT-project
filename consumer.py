@@ -11,6 +11,6 @@ consumer = KafkaConsumer(
         )
 
 for msg in consumer:
-    message = msg.value
+    message = msg.value['log']
     log = message.split(',')
-    print(log[0], log[1])
+    print(log[0], log[2])
