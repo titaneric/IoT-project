@@ -14,15 +14,15 @@ consumer = KafkaConsumer(
     auto_offset_reset='earliest',
     enable_auto_commit=True,
     group_id='my-group',
-    value_deserializer=lambda x: loads(x.decode('utf-8'))
+    value_deserializer=lambda x: x.decode('utf-8')
 )
 
-split_producer = KafkaProducer(bootstrap_servers=['localhost:9092'], value_serializer=lambda x: dumps(x).encode('utf-8'))
+# split_producer = KafkaProducer(bootstrap_servers=['localhost:9092'], value_serializer=lambda x: dumps(x).encode('utf-8'))
 
 line = list(map(lambda x: x.replace(' ', '_'), line.split(',')))
 for msg in consumer:
-    message = msg.value['log']
+    message = msg.value
     log_dict = dict(zip(line, message.split(',')))
     print(log_dict['start_time'], log_dict['source_ip'])
-    split_producer.send('log_split', value=log_dict)
+    # split_producer.send('log_split', value=log_dict)
 

@@ -18,6 +18,13 @@ cd cp-all-in-one/
 docker-compose up -d --build
 ```
 
+
+## Docker Image Installation
+
+https://docs.confluent.io/3.2.2/installation/docker/docs/quickstart.html
+
+```bash
+```
 ## Create Topic
 
 ```bash
@@ -34,10 +41,10 @@ docker-compose exec ksql-cli ksql http://ksql-server:8088
 ## User Log Stream
 
 ```bash
-CREATE STREAM user_log (receive_time BIGINT, type_ VARCHAR, \
+CREATE STREAM logtest (receive_time BIGINT, type VARCHAR, \
 source_ip VARCHAR, from_port INT, dest_ip VARCHAR, to_port INT, \
 application VARCHAR, action VARCHAR, session_end VARCHAR, \
 byte_receive INT, byte_send INT, ip_protocol VARCHAR, \
 packet_receive INT, packet_send INT, start_time BIGINT) \
-WITH (KAFKA_TOPIC='user_log', VALUE_FORMAT='JSON');
+WITH (KAFKA_TOPIC='user_log', VALUE_FORMAT='DELIMITED', TIMESTAMP='start_time');
 ```
