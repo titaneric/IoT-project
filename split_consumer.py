@@ -23,6 +23,6 @@ line = list(map(lambda x: x.replace(' ', '_'), line.split(',')))
 for msg in consumer:
     message = msg.value
     log_dict = dict(zip(line, message.split(',')))
-    print(log_dict['start_time'], log_dict['source_ip'])
+    print(log_dict['start_time'], log_dict['source_ip'], msg.key)
     # split_producer.send('log_split', value=log_dict)
 
