@@ -1,8 +1,9 @@
 log/
 whole_month/
 .ipynb_checkpoints/
+checkpoint/
+env/
+__pycache__/
 *.pickle
 *.zip
 *.csv
-env/
-__pycache__
