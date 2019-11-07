@@ -1,5 +1,5 @@
 #! /home/chenyee/anaconda3/bin/python
-
+import random
 from time import sleep
 from json import dumps
 import sys
@@ -19,5 +19,6 @@ while True:
     sys.stdout.flush()
     #producer.send('user_log', value=log, key=key)
     cnt += 1
-    sleep(3)
+    sleep_sec = random.randint(1, 10)
+    sleep(sleep_sec)
 

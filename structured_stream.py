@@ -3,10 +3,8 @@ from functools import partial
 from datetime import datetime
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import window, explode, split, to_timestamp
+from pyspark.sql.functions import window, explode, split, to_timestamp, when
 from pyspark.sql.types import *
-
-from gen_log import ip_choices
 
 py_datetime_format = r"%Y/%m/%d %H:%M:%S"
 spark_datetime_format = "yyyy/MM/dd HH:mm:ss"
@@ -48,11 +46,15 @@ if __name__ == "__main__":
             logs = logs.withColumn(column, datetime_convert(column))
         else:
             logs = logs.withColumn(column, logs[column].cast(type_name()))
+
+    nctu_ip = when(logs["source_ip"].rlike(r"140.113.\d+\.\d+"), logs["source_ip"])\
+        .otherwise(logs["dest_ip"])
+    logs = logs.withColumn("NCTU_IP", nctu_ip)
     # logs.printSchema()
 
     # Group by specific time interval
     group_by_one_minute = logs.withWatermark("start_time", "1 minute")\
-        .groupBy(window("start_time", "1 minute"))
+        .groupBy(window("start_time", "1 minute"), "NCTU_IP")
 
     windowedOccurances = group_by_one_minute.count().orderBy('window')
 
