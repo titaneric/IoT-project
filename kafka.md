@@ -28,7 +28,7 @@ https://docs.confluent.io/3.2.2/installation/docker/docs/quickstart.html
 ## Create Topic
 
 ```bash
-docker-compose exec broker kafka-topics --create --zookeeper \
+sudo docker-compose exec broker kafka-topics --create --zookeeper \
 zookeeper:2181 --replication-factor 1 --partitions 1 --topic user_log
 ```
 
@@ -52,11 +52,11 @@ WITH (KAFKA_TOPIC='user_log', VALUE_FORMAT='DELIMITED', TIMESTAMP='start_time');
 ## Kafka Console Consumer
 
 ```bash
-docker run \
+sudo docker run \
   --net=host \
   --rm \
   confluentinc/cp-kafka:3.2.2 \
-  kafka-console-consumer --bootstrap-server localhost:9092 --topic user_log --new-consumer --from-beginning --max-messages 5
+  kafka-console-consumer --bootstrap-server localhost:9092 --topic windowed_appearance --new-consumer --from-beginning --max-messages 5
 ```
 
 ## Check Kafka logs
@@ -69,8 +69,8 @@ docker logs <container-id>
 docker-compose logs ksql-server
 ```
 
-## Check key
+## Submit spark job
 
-```bash
-PRINT 'user_log' FROM BEGINNING LIMIT 1;
+```
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4 structured_stream.py
 ```

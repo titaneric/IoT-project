@@ -12,6 +12,7 @@ line = ("{receive_time},{type_},{source_ip},{from_port},{dest_ip},{to_port},"
         "{ip_protocol},{packet_receive},{packet_send},{start_time}")
 
 source_choices = [True, False]
+simple_nctu_ips = ["140.113.216.230", "140.113.24.185"]
 
 def generate_log_line():
     fake = Faker()
@@ -23,11 +24,12 @@ def generate_log_line():
     first_subnet = random.randint(1,255)
     second_subnet = random.randint(1,255)
 
-    nctu_ip = f"140.113.{first_subnet}.{second_subnet}"
-    source = random.choice(source_choices)
+    # nctu_ip = f"140.113.{first_subnet}.{second_subnet}"
+    nctu_ip = random.choice(simple_nctu_ips)
+    is_source = random.choice(source_choices)
 
-    source_ip = nctu_ip if source else fake.ipv4()
-    dest_ip = fake.ipv4() if source else nctu_ip
+    source_ip = nctu_ip if is_source else fake.ipv4()
+    dest_ip = fake.ipv4() if is_source else nctu_ip
 
     to_port = 80
     from_port = 22
