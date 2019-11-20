@@ -38,7 +38,7 @@ with open(args.header_file, 'r') as f:
     header = header.split(',')
 
 
-def get_unique_user(load=False, user_num=100):
+def get_unique_user(load=False, user_num=10):
     pickle_file = "unique_user.pickle"
     if not load:
         path = Path("/home/iot/v6")
@@ -147,13 +147,17 @@ def extract_feature_vector():
                         one_hot_user = one_hot_user_source.copy()
                         one_hot_user[user_index] = 1
 
+                        assert len(one_hot_user) == user_num
+                        assert one_hot_user[user_index] == 1
+                        assert one_hot_user.count(0) == (user_num - 1)
+
+                        user_log = [normalized_log.tolist(), one_hot_user]
+
                         if file_date in exclude_date:
-                            test_dict[feature].append(
-                                [normalized_log.tolist(), one_hot_user])
+                            test_dict[feature].append(user_log)
                             test_valid_dict[user_index].append(1)
                         else:
-                            train_dict[feature].append(
-                                [normalized_log.tolist(), one_hot_user])
+                            train_dict[feature].append(user_log)
                             train_valid_dict[user_index].append(1)
 
                     except ValueError:
@@ -163,15 +167,28 @@ def extract_feature_vector():
 
 def dump_to_pickle():
     print('Valid number for training')
+    trained_days = len(unique_days) - len(exclude_date)
+    tested_days = len(exclude_date)
+
     # print(len(unique_days), len(exclude_date))
+    assert len(train_valid_dict) == user_num
     for user, l in train_valid_dict.items():
         # print(user, len(l) // len(features))
-        assert len(l) // len(features) == len(unique_days) - len(exclude_date)
+        assert len(l) // len(features) == trained_days
 
     print('Valid number for testing')
+    assert len(test_valid_dict) == user_num
     for user, l in test_valid_dict.items():
         # print(user, len(l) // len(features))
-        assert len(l) // len(features) == len(exclude_date)
+        assert len(l) // len(features) == tested_days
+
+    for feature, vector in train_dict.items():
+        print(f"Valida number for feature {feature} in training")
+        assert len(vector) == trained_days * user_num
+
+    for feature, vector in test_dict.items():
+        print(f"Valida number for feature {feature} in testing")
+        assert len(vector) == tested_days * user_num
 
     with open(train_file_name, 'wb') as pi:
         pickle.dump(train_dict, pi)
