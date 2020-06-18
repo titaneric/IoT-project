@@ -32,6 +32,13 @@ sudo docker-compose exec broker kafka-topics --create --zookeeper \
 zookeeper:2181 --replication-factor 1 --partitions 1 --topic user_log
 ```
 
+## Clean Topic
+
+```bash
+sudo docker-compose exec broker kafka-topics --zookeeper \
+zookeeper:2181 --delete --topic someTopic
+```
+
 ## Start KSQL CLI
 
 ```bash

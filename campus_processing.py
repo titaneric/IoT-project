@@ -5,11 +5,11 @@ import locale
 
 import pandas as pd
 
-data_dir = Path("/home/chenyee/campus/compressed")
+data_dir = Path("/home/chenyee/campus/ldap80")
 
-started_pattern = r"(.*)\sopenldap1.*\sconn=(\d+)\s.*\sfrom\sIP=(.*):(\d+)\s\(.*"
+started_pattern = r"(.*)\sproxy1.*\sconn=(\d+)\s.*\sfrom\sIP=(.*):(\d+)\s\(.*"
 info_pattern = r'.*\sconn=(\d+)\s.*dn="cn=([^,]*).*,ou=([^\d]+),o=.*".*'
-closed_pattern = r"(.*)\sopenldap1.*\sconn=(\d+)\s.*\sclosed.*"
+closed_pattern = r"(.*)\sproxy1.*\sconn=(\d+)\s.*\sclosed.*"
 
 time_format = r"%b %d %H:%M:%S"
 
@@ -29,6 +29,7 @@ def process_line(line):
         started_time = get_datetime_obj(started_result.group(1))
         if record_day is None:
             record_day = str(started_time.date())
+            print(record_day)
         connection_id = started_result.group(2)
         source_ip = started_result.group(3)
         source_port = started_result.group(4)
@@ -72,8 +73,7 @@ for d in sorted(data_dir.iterdir(), key=lambda f: int(f.name.split(".")[-1]), re
     with open(d, "r") as f:
         for line in f.readlines():
             process_line(line)
-
     df = pd.DataFrame.from_records(records)
-    df.to_csv(f"/home/chenyee/campus/processed/{record_day}.csv", index=False)
+    df.to_csv(f"/home/chenyee/campus/server1/{record_day}.csv", index=False)
     records.clear()
     record_day = None

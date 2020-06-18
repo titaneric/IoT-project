@@ -38,39 +38,47 @@ with open(args.header_file, 'r') as f:
     header = header.split(',')
 
 
-def get_unique_user(load=False, user_num=10):
-    pickle_file = "unique_user.pickle"
+def get_unique_user(load=False, dest=False, user_num=1000):
+    pickle_file = "unique_dest.pickle" if dest else "unique_user.pickle"
     if not load:
         path = Path("/home/iot/v6")
         unique_user = set()
         for f in path.iterdir():
             log = pd.read_csv(f, header=None, names=header)
-
             source_ip = log["source-ip"]
-            unique_source_user = source_ip[source_ip.str.contains(
-                "nctu_ip")].unique()
+            source_ip_mask = source_ip.str.contains("nctu_ip")
+            if dest:
+                source_ip_mask = ~source_ip_mask
+            unique_source_user = source_ip[source_ip_mask].unique()
             unique_user.update(unique_source_user.tolist())
 
             dest_ip = log["dest-ip"]
-            unique_dest_user = dest_ip[dest_ip.str.contains(
-                "nctu_ip")].unique()
+            dest_ip_mask = dest_ip.str.contains("nctu_ip")
+            if dest:
+                dest_ip_mask = ~dest_ip_mask
+            unique_dest_user = dest_ip[dest_ip_mask].unique()
             unique_user.update(unique_dest_user.tolist())
-
         with open(pickle_file, 'wb') as pi:
             pickle.dump(unique_user, pi)
     else:
         with open(pickle_file, 'rb') as f:
             unique_user = pickle.load(f)
 
-    return list(unique_user)[:user_num]
+    # return list(unique_user)[:user_num]
+    return list(unique_user)
 
+
+def sort_by_appearance():
+    pass
 
 features = list(map(lambda feature: feature.strip(), args.features.split()))
 for feature in features:
     if feature != 'appearance':
         assert feature in set(header)
 
-unique_users = get_unique_user(load=True)
+# unique_users = get_unique_user(load=True)
+unique_users = get_unique_user()
+
 user_num = len(unique_users)
 print(f"Number of unique user is {user_num}")
 
@@ -199,5 +207,5 @@ def dump_to_pickle():
 
 if __name__ == "__main__":
     print(f'Arguments are', args)
-    extract_feature_vector()
-    dump_to_pickle()
+    # extract_feature_vector()
+    # dump_to_pickle()

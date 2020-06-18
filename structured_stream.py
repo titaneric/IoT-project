@@ -43,6 +43,7 @@ if __name__ == "__main__":
             .format("kafka") \
             .option("kafka.bootstrap.servers", "localhost:9092") \
             .option("subscribe", "user_log") \
+            .option("failOnDataLoss", "false") \
             .load()
 
     split_column = logs.withColumn("_temp", F.split(logs.value, ","))

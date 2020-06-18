@@ -3,10 +3,8 @@ import pickle
 
 import torch
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms
 import pandas as pd
 import matplotlib.pyplot as plt
-from skimage import io
 import numpy as np
 
 
@@ -43,9 +41,9 @@ class NetworkLogDataset(Dataset):
         return sample
 
 if __name__ == "__main__":
-    features = 'appearance byte-receive byte-send'
+    features = 'appearance'
     for feature in features.split():
-        for pickle_file in ['train.pickle', 'test.pickle']:
+        for pickle_file in ['v6_1000_train.pickle', 'v6_1000_test.pickle']:
             print(f'Valid for {pickle_file} in dataloader of feature {feature}')
             log_dataset = NetworkLogDataset(pickle_file=pickle_file, feature=feature)
 
