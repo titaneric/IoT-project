@@ -32,6 +32,11 @@ sudo docker-compose exec broker kafka-topics --create --zookeeper \
 zookeeper:2181 --replication-factor 1 --partitions 1 --topic user_log
 ```
 
+```bash
+sudo docker-compose exec broker kafka-topics --create --zookeeper \
+zookeeper:2181 --replication-factor 1 --partitions 1 --topic windowed_appearance
+```
+
 ## Clean Topic
 
 ```bash
@@ -63,7 +68,7 @@ sudo docker run \
   --net=host \
   --rm \
   confluentinc/cp-kafka:3.2.2 \
-  kafka-console-consumer --bootstrap-server localhost:9092 --topic windowed_appearance --new-consumer --from-beginning --max-messages 5
+  kafka-console-consumer --bootstrap-server localhost:9092 --topic user_log --new-consumer --from-beginning --max-messages 5
 ```
 
 ## Check Kafka logs
@@ -79,5 +84,11 @@ docker-compose logs ksql-server
 ## Submit spark job
 
 ```
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.11:2.4.4 structured_stream.py
+pip instal pyspark
+```
+
+https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#deploying
+
+```
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0 structured_stream.py
 ```
