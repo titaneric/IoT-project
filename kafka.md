@@ -18,6 +18,13 @@ cd cp-all-in-one/
 docker-compose up -d --build
 ```
 
+## Docs
+
+- https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
+- https://spark.apache.org/docs/latest/api/python/pyspark.sql.html
+- https://spark.apache.org/docs/2.2.0/api/python/pyspark.sql.html
+- https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#module-pyspark.sql.types
+- https://docs.confluent.io/current/app-development/kafkacat-usage.html
 
 ## Docker Image Installation
 
@@ -68,7 +75,7 @@ sudo docker run \
   --net=host \
   --rm \
   confluentinc/cp-kafka:3.2.2 \
-  kafka-console-consumer --bootstrap-server localhost:9092 --topic user_log --new-consumer --from-beginning --max-messages 5
+  kafka-console-consumer --bootstrap-server localhost:9092 --topic user_log --new-consumer --from-beginning --max-messages 5 --property print.key=true
 ```
 
 ## Check Kafka logs
@@ -81,6 +88,30 @@ docker logs <container-id>
 docker-compose logs ksql-server
 ```
 
+## Kafkacat debug
+
+```bash
+docker run --rm solsson/kafkacat \
+      -b localhost:9092 \
+      -t traffic_log -C \
+      -f '\nKey (%K bytes): %k
+  Value (%S bytes): %s
+  Timestamp: %T
+  Partition: %p
+  Offset: %o
+  Headers: %h\n'
+```
+
+
+docker run --rm edenhill/kafkacat:1.5.0 \
+      -b kafka-broker:9092 \
+      -t traffic_log -C \
+      -f '\nKey (%K bytes): %k
+  Value (%S bytes): %s
+  Timestamp: %T
+  Partition: %p
+  Offset: %o
+  Headers: %h\n'
 ## Submit spark job
 
 ```
@@ -92,3 +123,19 @@ https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
 ```
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0 structured_stream.py
 ```
+
+## Debug Spark
+
+```
+df.show()
+
+logs.printSchema()
+# logs.awaitTermination()
+
+logs = logs.writeStream\
+    .format("console")\
+    .option('truncate', 'false')\
+    .trigger(once=True) \
+    .start()
+```
+

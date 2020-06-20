@@ -1,7 +1,7 @@
 log/
 whole_month/
 .ipynb_checkpoints/
-checkpoint/
+checkpoint*/
 env/
 __pycache__/
 *.pickle
