@@ -1,0 +1,44 @@
+{
+    "fields": [
+        {
+            "name": "receive_time",
+            "type": "int",
+            "logicalType": "date"
+        },
+        {
+            "name": "type",
+            "type": "string"
+        },
+        {
+            "name": "threat_content_type",
+            "type": "string"
+        },
+        {
+            "name": "source_address",
+            "type": "string"
+        },
+        {
+            "name": "destination_address",
+            "type": "string"
+        },
+        {
+            "name": "threat_id",
+            "type": "string"
+        },
+        {
+            "name": "severity",
+            "type": "string"
+        },
+        {
+            "name": "nctu_address",
+            "type": "string"
+        },
+        {
+            "name": "appearance",
+            "type": "int"
+        }
+    ],
+    "name": "value_threat_log",
+    "namespace": "",
+    "type": "record"
+}

@@ -5,6 +5,7 @@ from datetime import datetime
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
+from pyspark.sql.avro.functions import from_avro, to_avro
 
 from config import debug
 
@@ -13,7 +14,7 @@ datetime_convert = partial(F.to_timestamp, format=spark_datetime_format)
 
 
 def format_header(col):
-    return col.replace(' ', '_').lower()
+    return col.replace(' ', '_').replace('/', '_').lower()
 
 
 traffic_header = (
@@ -165,16 +166,24 @@ def preprocessing_df(df, log_type):
     feature_aggregation = (F.sum(F.col(feature)) for feature in features)
     windowed_aggregations = group_by_one_minute.agg(
         *feature_aggregation).orderBy('window', ascending=False)
-
+    
+    # TODO reduce is a good idea!
+    for column in features:
+        windowed_aggregations = windowed_aggregations.withColumnRenamed(
+            f"SUM({column})", column
+        )
+    windowed_aggregations = windowed_aggregations.withColumn("window", F.col("window.start"))
     if debug:
+        windowed_aggregations.printSchema()
         save_aggregations = windowed_aggregations.writeStream\
             .outputMode("complete")\
             .format("console")\
             .option('truncate', 'false')\
+            .trigger(once=True) \
             .start()
     else:
         key = F.to_json(F.struct("nctu_address", "window"))
-        selected_header = [F.col(f"SUM({column})") for column in features]
+        selected_header = [F.col(column) for column in features]
         value = F.to_json(F.struct(selected_header))
         save_aggregations = to_saved_record(
             windowed_aggregations, key, value)

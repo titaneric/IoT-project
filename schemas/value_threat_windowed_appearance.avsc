@@ -1,0 +1,11 @@
+{
+    "fields": [
+        {
+            "name": "appearance",
+            "type": "int"
+        }
+    ],
+    "name": "value_threat_windowed_appearance",
+    "namespace": "",
+    "type": "record"
+}

@@ -1,0 +1,76 @@
+{
+    "fields": [
+        {
+            "name": "type",
+            "type": "string"
+        },
+        {
+            "name": "threat_content_type",
+            "type": "string"
+        },
+        {
+            "name": "source_address",
+            "type": "string"
+        },
+        {
+            "name": "destination_address",
+            "type": "string"
+        },
+        {
+            "name": "application",
+            "type": "string"
+        },
+        {
+            "name": "source_port",
+            "type": "string"
+        },
+        {
+            "name": "destination_port",
+            "type": "string"
+        },
+        {
+            "name": "protocol",
+            "type": "string"
+        },
+        {
+            "name": "action",
+            "type": "string"
+        },
+        {
+            "name": "bytes_sent",
+            "type": "int"
+        },
+        {
+            "name": "bytes_received",
+            "type": "int"
+        },
+        {
+            "name": "start_time",
+            "type": "int",
+            "logicalType": "date"
+        },
+        {
+            "name": "packets_sent",
+            "type": "int"
+        },
+        {
+            "name": "packets_received",
+            "type": "int"
+        },
+        {
+            "name": "session_end_reason",
+            "type": "string"
+        },
+        {
+            "name": "nctu_address",
+            "type": "string"
+        },
+        {
+            "name": "appearance",
+            "type": "int"
+        }
+    ],
+    "name": "value_traffic_log",
+    "namespace": "",
+    "type": "record"
+}

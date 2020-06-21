@@ -1,0 +1,16 @@
+{
+    "fields": [
+        {
+            "name": "nctu_address",
+            "type": "string"
+        },
+        {
+            "type": "int",
+            "name": "window",
+            "logicalType": "date"
+        }
+    ],
+    "name": "key_traffic_windowed_appearance",
+    "namespace": "",
+    "type": "record"
+}

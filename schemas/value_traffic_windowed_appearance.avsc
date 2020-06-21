@@ -1,0 +1,19 @@
+{
+    "fields": [
+        {
+            "name": "appearance",
+            "type": "int"
+        },
+        {
+            "name": "bytes_received",
+            "type": "int"
+        },
+        {
+            "name": "bytes_sent",
+            "type": "int"
+        }
+    ],
+    "name": "value_traffic_windowed_appearance",
+    "namespace": "",
+    "type": "record"
+}

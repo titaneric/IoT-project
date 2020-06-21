@@ -1,0 +1,11 @@
+{
+    "fields": [
+        {
+            "name": "nctu_address",
+            "type": "string"
+        }
+    ],
+    "name": "key_threat_log",
+    "namespace": "",
+    "type": "record"
+}
