@@ -106,13 +106,10 @@ log_type_dict = {
 }
 
 
-def to_saved_record(df, key, selected_header):
-    value = F.concat_ws(',', *selected_header).cast(T.BinaryType())
-    headers = F.array(F.struct(F.col("key"), F.col("value")))
+def to_saved_record(df, key, value):
     df = df.withColumn("key", key)
     df = df.withColumn("value", value)
-    df = df.withColumn("headers", headers)
-    save_df = df.select(F.col("key"), F.col("value"), F.col("headers"))
+    save_df = df.select(F.col("key"), F.col("value"))
     return save_df
 
 
@@ -151,8 +148,9 @@ def preprocessing_df(df, log_type):
     key = F.col("nctu_address").cast(T.StringType())
     selected_header = [F.col(column) for column in selected_header]
     selected_header += [F.col("appearance"), F.col("nctu_address")]
+    value = F.to_json(F.struct(selected_header))
 
-    save_logs = to_saved_record(logs, key, selected_header)
+    save_logs = to_saved_record(logs, key, value)
     save_logs = save_logs.writeStream \
         .format("kafka") \
         .option("kafka.bootstrap.servers", "localhost:9092") \
@@ -175,12 +173,11 @@ def preprocessing_df(df, log_type):
             .option('truncate', 'false')\
             .start()
     else:
-        key = F.col("nctu_address").cast(T.StringType())
+        key = F.to_json(F.struct("nctu_address", "window"))
         selected_header = [F.col(f"SUM({column})") for column in features]
-        selected_header += [F.col("nctu_address"),
-                            F.col("window").cast(T.StringType())]
+        value = F.to_json(F.struct(selected_header))
         save_aggregations = to_saved_record(
-            windowed_aggregations, key, selected_header)
+            windowed_aggregations, key, value)
         save_aggregations = save_aggregations.writeStream \
             .outputMode("complete")\
             .format("kafka") \
