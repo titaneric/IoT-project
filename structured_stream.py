@@ -11,6 +11,8 @@ from config import debug
 
 spark_datetime_format = "yyyy/MM/dd HH:mm:ss"
 datetime_convert = partial(F.to_timestamp, format=spark_datetime_format)
+# datetime_convert = partial(F.to_utc_timestamp, tz="Asia/Taipei")
+
 
 
 def format_header(col):
@@ -146,7 +148,7 @@ def preprocessing_df(df, log_type):
     logs = logs.withColumn("appearance", F.lit(1))
 
     # Save splited result
-    key = F.col("nctu_address").cast(T.StringType())
+    key = F.to_json(F.struct(F.col("nctu_address")))
     selected_header = [F.col(column) for column in selected_header]
     selected_header += [F.col("appearance"), F.col("nctu_address")]
     value = F.to_json(F.struct(selected_header))
@@ -173,8 +175,11 @@ def preprocessing_df(df, log_type):
             f"SUM({column})", column
         )
     windowed_aggregations = windowed_aggregations.withColumn("window", F.col("window.start"))
+    windowed_aggregations = windowed_aggregations.withColumn("window_ts",
+         F.to_timestamp(F.col("window"), "yyyy-MM-dd'T'hh:mm:ss").cast(T.TimestampType()))
+
     if debug:
-        windowed_aggregations.printSchema()
+        # windowed_aggregations.printSchema()
         save_aggregations = windowed_aggregations.writeStream\
             .outputMode("complete")\
             .format("console")\
@@ -182,7 +187,7 @@ def preprocessing_df(df, log_type):
             .trigger(once=True) \
             .start()
     else:
-        key = F.to_json(F.struct("nctu_address", "window"))
+        key = F.to_json(F.struct("nctu_address", "window", "window_ts"))
         selected_header = [F.col(column) for column in features]
         value = F.to_json(F.struct(selected_header))
         save_aggregations = to_saved_record(
@@ -195,8 +200,9 @@ def preprocessing_df(df, log_type):
             .option("checkpointLocation", "checkpoint_agg")\
             .start()
 
-    save_logs.awaitTermination()
-    save_aggregations.awaitTermination()
+    if not debug:
+        save_logs.awaitTermination()
+        save_aggregations.awaitTermination()
 
 
 if __name__ == "__main__":
