@@ -67,9 +67,9 @@ threat_header = (
 traffic_header = list(map(format_header, traffic_header.split(', ')))
 threat_header = list(map(format_header, threat_header.split(', ')))
 
-# spark_types = [datetime_convert, T.StringType, T.StringType, T.StringType, T.StringType, T.StringType,
-#                T.StringType, T.StringType, T.StringType, T.IntegerType, T.IntegerType,
-#                T.StringType, T.IntegerType, T.IntegerType, datetime_convert]
+spark_types = [datetime_convert, T.StringType, T.StringType, T.StringType, T.StringType, T.StringType,
+               T.StringType, T.StringType, T.StringType, T.IntegerType, T.IntegerType,
+               T.StringType, T.IntegerType, T.IntegerType, datetime_convert]
 
 traffic_types = [T.StringType, T.StringType, T.StringType, T.StringType, T.StringType,
                  T.StringType, T.StringType, T.StringType, T.StringType, T.IntegerType, T.IntegerType,
@@ -109,14 +109,29 @@ log_type_dict = {
 }
 
 
-def to_saved_record(df, key, value):
-    df = df.withColumn("key", key)
-    df = df.withColumn("value", value)
-    save_df = df.select(F.col("key"), F.col("value"))
-    return save_df
+if __name__ == "__main__":
+    spark = SparkSession\
+        .builder\
+        .appName("StructuredLogAggragationWindowed")\
+        .getOrCreate()
 
-
-def preprocessing_df(df, log_type):
+    if debug:
+        logs = spark \
+            .readStream \
+            .format("socket") \
+            .option("host", "localhost") \
+            .option("port", 6666) \
+            .load()
+    else:
+        logs = spark \
+            .readStream \
+            .format("kafka") \
+            .option("kafka.bootstrap.servers", "localhost:9092") \
+            .option("subscribe", "user_log") \
+            .option("failOnDataLoss", "false") \
+            .load()
+    log_type = "traffic"
+    df = logs.filter(logs.value.rlike('TRAFFIC'))
     header = log_type_dict[log_type]["header"]
     indices = log_type_dict[log_type]["indices"]
     types = log_type_dict[log_type]["types"]
@@ -143,97 +158,19 @@ def preprocessing_df(df, log_type):
         .otherwise(F.col("destination_address"))
     logs = logs.withColumn("nctu_address", nctu_ip)
     logs = logs.withColumn("appearance", F.lit(1))
-    logs = logs.withColumn(f"{time_attr}_unix_ts", F.unix_timestamp(F.col(time_attr), spark_datetime_format))
-    logs = logs.withColumn(f"{time_attr}_timestamp", datetime_convert(F.col(time_attr)).cast("timestamp"))
+    logs = logs.withColumn(f"{time_attr}_ts", F.unix_timestamp(F.col(time_attr), spark_datetime_format))
+    logs = logs.withColumn(f"{time_attr}_timestamp", F.to_timestamp(F.col(time_attr), spark_datetime_format).cast("timestamp"))
 
-    # Save splited result
-    key = F.to_json(F.struct(F.col("nctu_address")))
-    # selected_header = [F.col(column) for column in selected_header]
-    # selected_header += [F.col("appearance"), F.col("nctu_address"), F.col(f"{time_attr}_unix_ts")]
-    selected_header = [F.col(column) for column in logs.columns]
-    value = F.to_json(F.struct(selected_header))
-
-    save_logs = to_saved_record(logs, key, value)
-    save_logs = save_logs.writeStream \
-        .format("kafka") \
-        .option("kafka.bootstrap.servers", "localhost:9092") \
-        .option("topic", topic) \
-        .option("checkpointLocation", "checkpoint_logs")\
-        .start()
-
-    # Group by specific time interval
-    # Allow the data to arrive late at most 10 minites
-    # Group the nctu_address by timestamp per minite
-    group_by_one_minute = logs.withWatermark(f"{time_attr}_timestamp", "10 minutes")\
-        .groupBy(F.window(F.col(f"{time_attr}_timestamp"), "1 minute"), F.col("nctu_address"))
-
-    feature_aggregation = (F.sum(F.col(feature)) for feature in features)
-    # Only can sort the dataframe in complete mode
-    windowed_aggregations = group_by_one_minute.agg(
-        *feature_aggregation)#.orderBy('window', ascending=False)
-    
-    # TODO reduce is a good idea!
-    for column in features:
-        windowed_aggregations = windowed_aggregations.withColumnRenamed(
-            f"SUM({column})", column
-        )
+    windowed_aggregations = logs.groupBy(
+    F.window(F.col(f"{time_attr}_timestamp"), "10 minutes", "5 minutes"),
+    F.col("nctu_address")
+        ).count()
     windowed_aggregations = windowed_aggregations.withColumn("window", F.col("window.start"))
     windowed_aggregations = windowed_aggregations.withColumn("window_unix_ts", F.unix_timestamp(F.col("window")))
-
-    if debug:
-        # windowed_aggregations.printSchema()
-        save_aggregations = windowed_aggregations.writeStream\
-            .outputMode("update")\
-            .format("console")\
-            .option('truncate', 'false')\
-            .trigger(once=True) \
-            .start()
-    else:
-        key = F.to_json(F.struct("nctu_address", "window", "window_unix_ts"))
-        # selected_header = [F.col(column) for column in features]
-        # selected_header += [F.col("appearance"), F.col("nctu_address"), F.col(f"{time_attr}_unix_ts")]
-        selected_header = [F.col(column) for column in windowed_aggregations.columns]
-
-        value = F.to_json(F.struct(selected_header))
-        save_aggregations = to_saved_record(
-            windowed_aggregations, key, value)
-        save_aggregations = save_aggregations.writeStream \
-            .outputMode("update")\
-            .format("kafka") \
-            .option("kafka.bootstrap.servers", "localhost:9092") \
-            .option("topic", agg_topic) \
-            .option("checkpointLocation", "checkpoint_agg")\
-            .start()
-
-    if not debug:
-        save_logs.awaitTermination()
-        save_aggregations.awaitTermination()
-
-
-if __name__ == "__main__":
-    spark = SparkSession\
-        .builder\
-        .appName("StructuredLogAggragationWindowed")\
-        .getOrCreate()
-
-    if debug:
-        logs = spark \
-            .readStream \
-            .format("socket") \
-            .option("host", "localhost") \
-            .option("port", 6666) \
-            .load()
-    else:
-        logs = spark \
-            .readStream \
-            .format("kafka") \
-            .option("kafka.bootstrap.servers", "localhost:9092") \
-            .option("subscribe", "user_log") \
-            .option("failOnDataLoss", "false") \
-            .load()
-
-    traffic_logs = logs.filter(logs.value.rlike('TRAFFIC'))
-    threat_logs = logs.filter(logs.value.rlike('THREAT'))
-
-    preprocessing_df(traffic_logs, "traffic")
-    preprocessing_df(threat_logs, "threat")
+    windowed_aggregations = windowed_aggregations.writeStream\
+        .outputMode("complete")\
+        .format("console")\
+        .option('truncate', 'false')\
+        .trigger(once=True) \
+        .start()
+    windowed_aggregations.awaitTermination()
