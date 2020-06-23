@@ -13,6 +13,8 @@ pip install pymongo
 - https://docs.confluent.io/current/installation/docker/config-reference.html
 - https://www.confluent.io/blog/kafka-connect-deep-dive-converters-serialization-explained/
 - https://www.confluent.io/blog/kafka-connect-deep-dive-converters-serialization-explained/
+- https://docs.confluent.io/current/schema-registry/connect.html
+- https://docs.mongodb.com/kafka-connector/master/kafka-sink/
 
 ## Schema-registry
 
@@ -65,4 +67,10 @@ curl -X PUT http://localhost:8083/connectors/sink-mongodb-users/config -H "Conte
       "value.converter":"org.apache.kafka.connect.json.JsonConverter",
       "value.converter.schemas.enable": "false"
 }' 
+```
+
+## Exec
+
+```
+mongo vector.js
 ```

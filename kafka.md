@@ -48,8 +48,15 @@ zookeeper:2181 --replication-factor 1 --partitions 1 --topic user_log
 sudo docker-compose exec broker kafka-topics --create --zookeeper \
 zookeeper:2181 --replication-factor 1 --partitions 1 --topic windowed_appearance
 ```
+## Purge Topic
 
-## Clean Topic
+Wait some time to take effect
+
+```bash
+kafka-configs --bootstrap-server 127.0.0.1:9092 --entity-type topics --alter --entity-name <topic name> --add-config retention.ms=1000
+```
+
+## Delete Topic
 
 ```bash
 sudo docker-compose exec broker kafka-topics --zookeeper \
