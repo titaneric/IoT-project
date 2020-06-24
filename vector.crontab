@@ -1,0 +1,1 @@
+0 */3 * * * ~/anaconda3/bin/python ~/IoT-project/vector_producer.py

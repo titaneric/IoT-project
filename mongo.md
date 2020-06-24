@@ -71,6 +71,17 @@ curl -X PUT http://localhost:8083/connectors/sink-mongodb-users/config -H "Conte
 
 ## Exec
 
+- https://docs.mongodb.com/manual/tutorial/write-scripts-for-the-mongo-shell/
+
 ```
 mongo vector.js
 ```
+
+## array create
+
+-https://docs.mongodb.com/manual/reference/operator/aggregation/bucket/
+
+## TTL
+
+- https://docs.mongodb.com/manual/tutorial/expire-data/
+
