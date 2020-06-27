@@ -24,6 +24,22 @@ confluent local start
 pip install pyspark kafka-python
 ```
 
+### Confluent Control Center
+
+- Monitor the topic
+- Status of Connector
+- Topic create, delete and set retention
+- KSQL
+
+Navigate browser to http://127.0.0.1:9021
+
+Create topics:
+- user_log
+- traffic_log
+- threat_log
+- traffic_windowed_appearance
+- threat_windowed_appearance
+
 ## Execution
 
 Connect to port and send to kafka topic
@@ -36,15 +52,6 @@ Consume topic and calculate the windowed group appearance
 spark-submit --packages \
 org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0,\org.apache.spark:spark-avro_2.12:3.0.0 structured_stream.py
 ```
-
-### Confluent Control Center
-
-- Monitor the topic
-- Status of Connector
-- Topic create, delete and set retention
-- KSQL
-
-http://127.0.0.1:9021
 
 ## Install Connector
 
@@ -75,5 +82,5 @@ curl -X PUT http://localhost:8083/connectors/sink-mongodb-users/config -H "Conte
 
 ### Submit cronjob
 ```
-0 */3 * * * python ~/IoT-project/vector_producer.py
+crontab vector.crontab
 ```
