@@ -125,7 +125,7 @@ sudo python socket_client.py
 ## Submit spark job
 
 ```
-pip instal pyspark kafka-python ksql confluent-kafka
+pip instal pyspark kafka-python
 ```
 
 https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html#deploying
@@ -133,11 +133,6 @@ https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html
 ```
 spark-submit --packages \
 org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0,\org.apache.spark:spark-avro_2.12:3.0.0 structured_stream.py
-```
-
-```
-spark-submit --packages \
-org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0,\org.apache.spark:spark-avro_2.12:3.0.0 vector_producer.py
 ```
 
 ## Debug Spark

@@ -40,12 +40,13 @@ docker run -d -it my-connector
 curl -X PUT http://localhost:8083/connectors/source-mongodb-inventory/config -H "Content-Type: application/json" -d '{
       "tasks.max":1,
       "connector.class":"com.mongodb.kafka.connect.MongoSourceConnector",
-      "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-      "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+      "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+      "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter.schemas.enable": "false",
       "connection.uri":"mongodb://localhost:27017",
       "database":"log",
-      "collection":"traffic_windowed_appearance",
-      "pipeline":"[{\"$match\": { \"$and\": [ { \"updateDescription.updatedFields.quantity\" : { \"$lte\": 5 } }, {\"operationType\": \"update\"}]}}]", 
+      "collection":"traffic_appearance_vector",
       "topic.prefix": ""
 }'
 ```
