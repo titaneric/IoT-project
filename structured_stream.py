@@ -41,6 +41,9 @@ traffic_header = (
     "Tunnel Type, SCTP Association ID, SCTP Chunks, SCTP Chunks Sent, SCTP Chunks Received, "
     "UUID for rule, HTTP/2 Connection"
 )
+
+# source from https://docs.paloaltonetworks.com/pan-os/9-0/pan-os-admin/monitoring/use-syslog-for-monitoring/syslog-field-descriptions/threat-log-fields.html
+
 threat_header = (
     "FUTURE_USE, Receive Time, Serial Number, Type, Threat/Content Type, "
     "FUTURE_USE, Generated Time, Source Address, Destination Address, "
@@ -118,7 +121,9 @@ def to_saved_record(df, key, value):
     return save_df
 
 
-def preprocessing_df(df, log_type):
+def preprocessing_df(logs, log_type):
+    df = logs.filter(logs.value.rlike(log_type.upper()))
+
     header = log_type_dict[log_type]["header"]
     indices = log_type_dict[log_type]["indices"]
     types = log_type_dict[log_type]["types"]
@@ -169,16 +174,12 @@ def preprocessing_df(df, log_type):
     group_by_one_minute = logs.withWatermark(f"{time_attr}_timestamp", "10 minutes")\
         .groupBy(F.window(F.col(f"{time_attr}_timestamp"), "1 minute"), F.col("nctu_address"))
 
-    feature_aggregation = (F.sum(F.col(feature)) for feature in features)
+    feature_aggregation = [F.sum(F.col(feature)).alias(feature) for feature in features]
+    
     # Only can sort the dataframe in complete mode
     windowed_aggregations = group_by_one_minute.agg(
         *feature_aggregation)#.orderBy('window', ascending=False)
     
-    # TODO reduce is a good idea!
-    for column in features:
-        windowed_aggregations = windowed_aggregations.withColumnRenamed(
-            f"SUM({column})", column
-        )
     windowed_aggregations = windowed_aggregations.withColumn("window", F.col("window.start"))
     windowed_aggregations = windowed_aggregations.withColumn("window_unix_ts", F.unix_timestamp(F.col("window")))
 
@@ -239,9 +240,4 @@ if __name__ == "__main__":
             .option("failOnDataLoss", "false") \
             .load()
 
-    if opts.type == "traffic":
-        traffic_logs = logs.filter(logs.value.rlike('TRAFFIC'))
-        preprocessing_df(traffic_logs, opts.type)
-    elif opts.type == "threat":
-        threat_logs = logs.filter(logs.value.rlike('THREAT'))
-        preprocessing_df(threat_logs, opts.type)
+    preprocessing_df(logs, opts.type)

@@ -99,6 +99,21 @@ curl -X PUT http://localhost:8083/connectors/sink-mongodb-threat/config -H "Cont
 }' 
 ```
 
+```bash
+curl -X PUT http://localhost:8083/connectors/sink-mongodb-severity/config -H "Content-Type: application/json" -d ' {
+      "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
+      "tasks.max":"1",
+      "topics":"threat_log",
+      "connection.uri":"mongodb://localhost:27017",
+      "database":"log",
+      "collection":"threat_log",
+      "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false"
+}' 
+```
+
 ### Submit cronjob
 ```
 crontab vector.crontab
