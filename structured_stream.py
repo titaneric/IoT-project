@@ -1,3 +1,4 @@
+import argparse
 from functools import partial
 
 from datetime import datetime
@@ -18,6 +19,7 @@ datetime_convert = partial(F.to_timestamp, format=spark_datetime_format)
 def format_header(col):
     return col.replace(' ', '_').replace('/', '_').lower()
 
+# Source from https://docs.paloaltonetworks.com/pan-os/9-0/pan-os-admin/monitoring/use-syslog-for-monitoring/syslog-field-descriptions/traffic-log-fields.html
 
 traffic_header = (
     "FUTURE_USE, Receive Time, Serial Number, Type, Threat/Content Type, "
@@ -158,7 +160,7 @@ def preprocessing_df(df, log_type):
         .format("kafka") \
         .option("kafka.bootstrap.servers", "localhost:9092") \
         .option("topic", topic) \
-        .option("checkpointLocation", "checkpoint_logs")\
+        .option("checkpointLocation", f"checkpoint_logs_{log_type}")\
         .start()
 
     # Group by specific time interval
@@ -202,7 +204,7 @@ def preprocessing_df(df, log_type):
             .format("kafka") \
             .option("kafka.bootstrap.servers", "localhost:9092") \
             .option("topic", agg_topic) \
-            .option("checkpointLocation", "checkpoint_agg")\
+            .option("checkpointLocation", f"checkpoint_agg_{log_type}")\
             .start()
 
     if not debug:
@@ -211,6 +213,11 @@ def preprocessing_df(df, log_type):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        description="Calculate the windowed aggregation")
+    parser.add_argument('--type', type=str, help="traffic or threat")
+    opts = parser.parse_args()
+
     spark = SparkSession\
         .builder\
         .appName("StructuredLogAggragationWindowed")\
@@ -232,8 +239,9 @@ if __name__ == "__main__":
             .option("failOnDataLoss", "false") \
             .load()
 
-    traffic_logs = logs.filter(logs.value.rlike('TRAFFIC'))
-    threat_logs = logs.filter(logs.value.rlike('THREAT'))
-
-    preprocessing_df(traffic_logs, "traffic")
-    preprocessing_df(threat_logs, "threat")
+    if opts.type == "traffic":
+        traffic_logs = logs.filter(logs.value.rlike('TRAFFIC'))
+        preprocessing_df(traffic_logs, opts.type)
+    elif opts.type == "threat":
+        threat_logs = logs.filter(logs.value.rlike('THREAT'))
+        preprocessing_df(threat_logs, opts.type)

@@ -50,7 +50,11 @@ sudo python socket_client.py
 Consume topic and calculate the windowed group appearance
 ```bash
 spark-submit --packages \
-org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0,\org.apache.spark:spark-avro_2.12:3.0.0 structured_stream.py
+org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0,\org.apache.spark:spark-avro_2.12:3.0.0 structured_stream.py --type traffic
+```
+```bash
+spark-submit --packages \
+org.apache.spark:spark-sql-kafka-0-10_2.12:3.0.0,\org.apache.spark:spark-avro_2.12:3.0.0 structured_stream.py --type threat
 ```
 
 ## Install Connector
