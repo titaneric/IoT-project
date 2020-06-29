@@ -11,23 +11,11 @@ delta = {
     "hours": 6
 }
 
-if __name__ == "__main__":
-    conn = MongoClient()
-    db = conn["log"]
-    source = db["traffic_windowed_appearance"]
-    sink = db["traffic_appearance_vector"]
 
-    # Match window at certain range
-    end = datetime.now().replace(second=0,microsecond=0)
-    end_ts = time.mktime(end.timetuple())
-    begin = end - timedelta(**delta)
-    begin_ts = time.mktime(begin.timetuple())
-
-    print(begin, end)
-
+def aggregate_log(begin_ts, end_ts):
     matchStage = {
         "$match": {
-            "window_unix_ts": { "$gte": begin_ts, "$lt": end_ts }
+            "window_unix_ts": {"$gte": begin_ts, "$lt": end_ts}
         }
     }
 
@@ -40,8 +28,8 @@ if __name__ == "__main__":
             "agg": {
                 "$push": {
                     "appr": "$appearance",
-                    "bytes_received": "$bytes_received",
-                    "bytes_sent": "$bytes_sent",
+                    # "bytes_received": "$bytes_received",
+                    # "bytes_sent": "$bytes_sent",
                     "ts": "$window_unix_ts",
                 }
             },
@@ -50,7 +38,7 @@ if __name__ == "__main__":
 
     maximumProjectStage = {
         "$project": {
-            "appr": { "$max": "$agg.appr" }
+            "appr": {"$max": "$agg.appr"}
         }
     }
 
@@ -75,33 +63,62 @@ if __name__ == "__main__":
         ], allowDiskUse=True
     )
 
+    return cursor
+
+
+def form_vector(df):
+    df["date"] = pd.to_datetime(df["date"]).dt.strftime(time_format)
+    df.set_index("date", inplace=True)
+
+    feature = "appr"
+    full_agg = pd.DataFrame({feature: 0}, index=full_mins)
+    full_agg[feature] = df[feature]
+    full_agg.fillna(0, inplace=True)
+
+    tmp_max = np.max(full_agg[feature].values)
+    tmp_min = np.min(full_agg[feature].values)
+    diff = (tmp_max - tmp_min)
+    normalized_log = (full_agg[feature].values - tmp_min) / diff
+    normalized_log = np.nan_to_num(normalized_log)
+    assert len(normalized_log) == length
+    assert all(np.isnan(normalized_log)) is False
+
+    return normalized_log
+
+
+if __name__ == "__main__":
+    # Match window at certain range
+    end = datetime.now().replace(second=0, microsecond=0)
+    end_ts = time.mktime(end.timetuple())
+    begin = end - timedelta(**delta)
+    begin_ts = time.mktime(begin.timetuple())
+    print(begin, end)
+
     # exclude end
-    full_mins = pd.date_range(start=begin, end=end, freq="min", closed="left").strftime(time_format)
+    full_mins = pd.date_range(
+        start=begin, end=end, freq="min", closed="left").strftime(time_format)
     length = len(full_mins)
 
-    for log in cursor:
-        addr = log["_id"]
-        df = pd.DataFrame(log["list"])
-        df["date"] = pd.to_datetime(df["date"]).dt.strftime(time_format)
-        df.set_index("date", inplace=True)
+    conn = MongoClient()
+    db = conn["log"]
 
-        feature = "appr"
-        full_agg = pd.DataFrame({feature: 0}, index=full_mins)
-        full_agg[feature] = df[feature]
-        full_agg.fillna(0, inplace=True)
+    for log_type in ["traffic", "threat"]:
+        source = db[f"{log_type}_windowed_appearance"]
+        sink = db[f"{log_type}_appearance_vector"]
 
-        tmp_max = np.max(full_agg[feature].values)
-        tmp_min = np.min(full_agg[feature].values)
-        diff = (tmp_max - tmp_min)
-        normalized_log = (full_agg[feature].values - tmp_min) / diff
-        normalized_log = np.nan_to_num(normalized_log)
-        assert len(normalized_log) == length
-        assert all(np.isnan(normalized_log)) is False
+        cursor = aggregate_log(begin_ts, end_ts)
 
-        feature_vector = {
-            "feature": normalized_log.tolist(),
-            "address": addr,
-            "start": begin,
-            "end": end
-        }
-        sink.insert_one(feature_vector)
+        for log in cursor:
+            addr = log["_id"]
+            df = pd.DataFrame(log["list"])
+            normalized_log = form_vector(df)
+
+            feature_vector = {
+                "feature": normalized_log.tolist(),
+                "address": addr,
+                "start": begin,
+                "end": end
+            }
+            sink.insert_one(feature_vector)
+            # pprint.pprint(feature_vector)
+            # break

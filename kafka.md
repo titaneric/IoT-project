@@ -89,7 +89,7 @@ sudo docker run \
   --net=host \
   --rm \
   confluentinc/cp-kafka:3.2.2 \
-  kafka-console-consumer --bootstrap-server localhost:9092 --topic user_log --new-consumer --from-beginning --max-messages 5 --property print.key=true
+  kafka-console-consumer --bootstrap-server localhost:9092 --topic threat_log --from-beginning --max-messages 5 
 ```
 
 ## Check Kafka logs

@@ -70,13 +70,28 @@ confluent-hub install mongodb/kafka-connect-mongodb:latest
 ### Start connector
 
 ```bash
-curl -X PUT http://localhost:8083/connectors/sink-mongodb-users/config -H "Content-Type: application/json" -d ' {
+curl -X PUT http://localhost:8083/connectors/sink-mongodb-traffic/config -H "Content-Type: application/json" -d ' {
       "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
       "tasks.max":"1",
       "topics":"traffic_windowed_appearance",
       "connection.uri":"mongodb://localhost:27017",
       "database":"log",
       "collection":"traffic_windowed_appearance",
+      "key.converter":"org.apache.kafka.connect.json.JsonConverter",
+      "key.converter.schemas.enable": "false",
+      "value.converter":"org.apache.kafka.connect.json.JsonConverter",
+      "value.converter.schemas.enable": "false"
+}' 
+```
+
+```bash
+curl -X PUT http://localhost:8083/connectors/sink-mongodb-threat/config -H "Content-Type: application/json" -d ' {
+      "connector.class":"com.mongodb.kafka.connect.MongoSinkConnector",
+      "tasks.max":"1",
+      "topics":"threat_windowed_appearance",
+      "connection.uri":"mongodb://localhost:27017",
+      "database":"log",
+      "collection":"threat_windowed_appearance",
       "key.converter":"org.apache.kafka.connect.json.JsonConverter",
       "key.converter.schemas.enable": "false",
       "value.converter":"org.apache.kafka.connect.json.JsonConverter",
