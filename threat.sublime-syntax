@@ -1,0 +1,13 @@
+%YAML 1.2
+---
+name: threat
+file_extensions: [json]
+scope: extend.json
+
+contexts:
+  main:
+    - match: \b(informational|low|medium|high|critical)\b
+      scope: keyword.severity.json
+
+    - match: '\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
+      scope: keyword.ipv4.json
