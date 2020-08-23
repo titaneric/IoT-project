@@ -14,6 +14,7 @@ HOST, PORT = "0.0.0.0", 514
 # NO USER SERVICEABLE PARTS BELOW HERE...
 #
 # Source from https://gist.github.com/marcelom/4218010
+import socket
 import logging
 import socketserver 
 from kafka import KafkaProducer
@@ -22,7 +23,6 @@ from kafka import KafkaProducer
 producer = KafkaProducer(bootstrap_servers=['localhost:9092'], value_serializer=lambda x: x.encode('utf-8'))
 
 class SyslogUDPHandler(socketserver.BaseRequestHandler):
-
 	def handle(self):
 		data = bytes.decode(self.request[0].strip())
 		socket = self.request[1]
@@ -30,9 +30,15 @@ class SyslogUDPHandler(socketserver.BaseRequestHandler):
 		producer.send('user_log', value=str(data))
 		# logging.info(str(data))
 
+# Source from https://stackoverflow.com/questions/6380057/python-binding-socket-address-already-in-use
+class MyUDPServer(socketserver.UDPServer):
+    def server_bind(self):
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+
 if __name__ == "__main__":
 	try:
-		server = socketserver.UDPServer((HOST,PORT), SyslogUDPHandler)
+		server = MyUDPServer((HOST,PORT), SyslogUDPHandler)
 		server.serve_forever(poll_interval=0.5)
 	except (IOError, SystemExit):
 		raise
