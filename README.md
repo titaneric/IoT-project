@@ -28,7 +28,7 @@ export PATH=$PATH:$CONFLUENT_HOME/bin
 
 Start all processes
 ```bash
-confluent local start
+confluent local services start
 ```
 ### Install python libraries
 
